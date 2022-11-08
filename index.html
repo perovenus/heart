@@ -237,9 +237,6 @@
 
         ParticlePool.prototype.update = function (deltaTime) {
           var i;
-
-          // update active particles
-
           if (firstActive < firstFree) {
             for (i = firstActive; i < firstFree; i++)
               particles[i].update(deltaTime);
@@ -266,7 +263,11 @@
 
         ParticlePool.prototype.draw = function (context, image) {
           // draw active particles
-
+          // change color of particles
+          if (firstActive < firstFree) {
+            for (var i = firstActive; i < firstFree; i++)
+              particles[i].draw(context, image);
+          }
           if (firstActive < firstFree) {
             for (i = firstActive; i < firstFree; i++)
               particles[i].draw(context, image);
@@ -288,7 +289,6 @@
  * Putting it all together
 
  */
-
       (function (canvas) {
         var context = canvas.getContext("2d"),
           particles = new ParticlePool(settings.particles.length),
@@ -312,72 +312,79 @@
 
         // creating the particle image using a dummy canvas
 
-        var image = (function () {
-          var canvas = document.createElement("canvas"),
-            context = canvas.getContext("2d");
-
-          canvas.width = settings.particles.size;
-
-          canvas.height = settings.particles.size;
-
-          // helper function to create the path
-
-          function to(t) {
-            var point = pointOnHeart(t);
-
-            point.x =
-              settings.particles.size / 2 +
-              (point.x * settings.particles.size) / 350;
-
-            point.y =
-              settings.particles.size / 2 -
-              (point.y * settings.particles.size) / 350;
-
-            return point;
-          }
-
-          // create the path
-
-          context.beginPath();
-
-          var t = -Math.PI;
-
-          var point = to(t);
-
-          context.moveTo(point.x, point.y);
-
-          while (t < Math.PI) {
-            t += 0.01; // baby steps!
-
-            point = to(t);
-
-            context.lineTo(point.x, point.y);
-          }
-
-          context.closePath();
-
-          // create the fill
-
-          context.fillStyle = "#ea80b0";
-
-          context.fill();
-
-          // create the image
-
-          var image = new Image();
-
-          image.src = canvas.toDataURL();
-
-          return image;
-        })();
-
         // render that thing!
-
+        var times = 0;
+        var mycolor = "blue";
         function render() {
+          var image = (function () {
+            var canvas = document.createElement("canvas"),
+              context = canvas.getContext("2d");
+
+            canvas.width = settings.particles.size;
+
+            canvas.height = settings.particles.size;
+
+            // helper function to create the path
+
+            function to(t) {
+              var point = pointOnHeart(t);
+
+              point.x =
+                settings.particles.size / 2 +
+                (point.x * settings.particles.size) / 350;
+
+              point.y =
+                settings.particles.size / 2 -
+                (point.y * settings.particles.size) / 350;
+
+              return point;
+            }
+
+            // create the path
+
+            context.beginPath();
+
+            var t = -Math.PI;
+
+            var point = to(t);
+
+            context.moveTo(point.x, point.y);
+
+            while (t < Math.PI) {
+              t += 0.01; // baby steps!
+
+              point = to(t);
+              context.lineTo(point.x, point.y);
+            }
+
+            context.closePath();
+
+            // create the fill
+
+            //random blue and purple colors
+
+            //change color after 10 seconds
+    
+            context.fillStyle = mycolor;
+            if (times % 300 == 0) {
+              mycolor = mycolor == "blue" ? "purple" : "blue";
+              console.log(times);
+            }
+            times += 1;
+
+            context.fill();
+
+            // create the image
+
+            var image = new Image();
+
+            image.src = canvas.toDataURL();
+            return image;
+          })();
           // next animation frame
+          context.fillStyle = "red";
 
           requestAnimationFrame(render);
-
           // update time
 
           var newTime = new Date().getTime() / 1000,
@@ -407,7 +414,7 @@
           }
 
           // update and draw particles
-
+          var mycontext = context;
           particles.update(deltaTime);
 
           particles.draw(context, image);
@@ -427,7 +434,6 @@
 
         setTimeout(function () {
           onResize();
-
           render();
         }, 10);
       })(document.getElementById("pinkboard"));
